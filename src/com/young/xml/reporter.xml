@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Root>
+    <country>China</country>
+    <courses>Math</courses>
+    <courses>English</courses>
+    <courses>Computer</courses>
+    <courses>Society</courses>
+    <name>young</name>
+</Root>
