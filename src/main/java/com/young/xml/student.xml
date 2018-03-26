@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<student depart="ADM">
+    <country>China</country>
+    <courses>
+        <course>Math</course>
+        <course>English</course>
+        <course>Computer</course>
+        <course>Society</course>
+    </courses>
+    <name>Young</name>
+</student>
