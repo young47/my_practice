@@ -19,6 +19,12 @@ public class Join1 {
          Main End...
          MyThreadB Begin...
          MyThreadB End...
+     第三种：
+        MyThreadB Begin...1538190438984
+        MyThreadA Begin...1538190438984
+        MyThreadA End...1538190440985
+        Main End...1538190440986
+        MyThreadB End...1538190441988
      * @param args
      *
      * join(int milli) : milli表示当前线程至多wait这么长时间，时间一过，当前线程就会与别的线程争抢执行时间片。

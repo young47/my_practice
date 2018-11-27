@@ -19,7 +19,8 @@ public class InitTest {
         //System.out.println(Person.age);
 
         //new Asian();
-        System.out.println(Asian.name);
+//        System.out.println(Asian.name);
+        System.out.println(String.class.getClassLoader());
     }
 }
 

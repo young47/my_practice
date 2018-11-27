@@ -10,7 +10,15 @@ import java.util.List;
 public class MoveOper {
 
     public static void main(String[] args){
-        Integer i = -7;
+        Integer i = -1;
+        System.out.println(i+" byte :   "+i.byteValue());
+        System.out.println(i+" binary : " + Integer.toBinaryString(i)+" : "+i);
+        System.out.println(i+" >> 5 :   "+ Integer.toBinaryString(i>>5)+" : "+String.valueOf(i>>1));
+        System.out.println(i+" >> 2 :   "+ Integer.toBinaryString(i>>2)+" : "+String.valueOf(i>>2));
+        System.out.println(i+" >>> 1 :  "+ Integer.toBinaryString(i>>>1)+" : "+String.valueOf(i>>>1));
+        System.out.println(i+" >>> 2 :  "+ Integer.toBinaryString(i>>>2)+" : "+String.valueOf(i>>>2));
+
+        i = 5;
         System.out.println(i+" byte :   "+i.byteValue());
         System.out.println(i+" binary : " + Integer.toBinaryString(i)+" : "+i);
         System.out.println(i+" >> 1 :   "+ Integer.toBinaryString(i>>1)+" : "+String.valueOf(i>>1));
@@ -90,6 +98,11 @@ public class MoveOper {
              s1 = s1.concat("hh");
         }
         System.out.println(list);
+
+
+        System.out.println("146>>>3 = "+ (146>>>3));
+        byte bb = (byte)1;
+        System.out.println("1<<146 = "+ (bb<<146) +","+Integer.toBinaryString(bb<<146));
 
 
     }

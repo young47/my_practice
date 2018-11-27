@@ -16,6 +16,11 @@ public class Socket {
             ssc.configureBlocking(false);
             ssc.register(selector, SelectionKey.OP_ACCEPT);
 
+            System.out.println(Long.MAX_VALUE);
+            System.out.println(6381521720150765691l);
+
+            System.out.println(Long.MAX_VALUE - 6381521720150765691l);
+
 
         } catch (IOException e) {
             e.printStackTrace();

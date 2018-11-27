@@ -22,6 +22,15 @@ public class NumberTest {
         System.out.println(b==a); //这里拆箱 intValue()
         System.out.println(c==a); //false
 
+        long totalCnt = 728747;
+
+        int thisProgress = (int) (100 * 61178 / totalCnt);
+        System.out.println(thisProgress);
+
+        int sum = 60808+60865+61178+60671+60772+60851+60095+60644+60686+60935+60268+60974;
+        System.out.println("sum="+sum);
+
+
 
     }
 }

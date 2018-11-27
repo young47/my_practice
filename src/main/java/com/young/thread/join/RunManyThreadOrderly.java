@@ -8,10 +8,10 @@ public class RunManyThreadOrderly {
     public static void main(String[] args) {
         Task task = new Task();
         try {
-            for (int i = 1; i <= 100; i++) {
+            for (int i = 1; i <= 10; i++) {
                 MyThreadA myThreadA = new MyThreadA(task);
                 myThreadA.start();
-                myThreadA.join();
+                myThreadA.join(); //阻塞main线程
                 MyThreadB myThreadB = new MyThreadB(task);
                 myThreadB.start();
                 myThreadB.join();
