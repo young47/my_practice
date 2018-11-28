@@ -10,8 +10,16 @@ import java.util.Random;
 import java.util.zip.*;
 
 public class Test {
-    private static final int _1M = 1024 * 1024;
+    private static final int _1M = 1024 * 1024, _1K = 1024;
 
+    private static final String push = "{\"cid\":\"6459285550141976699\",\"intervalTime\":\"2700\",\"isFilter\":0,\"oidList\":[\"323497909\"," +
+            "\"323671414\",\"323694817\",\"323667198\",\"323609135\",\"323281545\",\"320583964\",\"323504503\"," +
+            "\"323212700\",\"323706929\",\"323373019\",\"323613666\",\"323500927\",\"323481442\",\"323500007\"," +
+            "\"323310454\",\"323502477\",\"323389275\",\"323178874\",\"323655284\"],\"type\":\"h\"," +
+            "\"userInfo\":\"{\\\"a\\\":44,\\\"ap\\\":32,\\\"c\\\":6459285550141976699,\\\"ch\\\":6508,\\\"dt\\\":\\\"\\\"," +
+            "\\\"f\\\":0,\\\"im\\\":\\\"862704031207255\\\",\\\"p\\\":10,\\\"pm\\\":0," +
+            "\\\"pt\\\":\\\"6459285550141976699\\\",\\\"pv\\\":0,\\\"s\\\":1,\\\"st\\\":0,\\\"t\\\":0,\\\"tm\\\":0," +
+            "\\\"v\\\":545}\"}";
     public static void main(String[] args) throws IOException, DataFormatException {
         byte[] bytes = construct();
         System.out.println("压缩前length=" + bytes.length);
@@ -37,6 +45,7 @@ public class Test {
 
         byte[] deCompressed = zlibDecompress(compressed);
         System.out.println("zlib解压缩后length=" + deCompressed.length);
+        System.out.println("zlib解压缩后 push=" + new String(deCompressed, Charsets.UTF_8).equals(push));
 
     }
 
@@ -47,7 +56,7 @@ public class Test {
         inflater.setInput(compressed);
 
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(compressed.length);
-        final byte[] buff = new byte[_1M];
+        final byte[] buff = new byte[_1K];
         while (!inflater.finished()){
             int count = inflater.inflate(buff);
             outputStream.write(buff, 0, count);
@@ -61,7 +70,7 @@ public class Test {
     private static byte[] zlibCompress(byte[] bytes) {
         final long begin = System.currentTimeMillis();
         // Compress the bytes
-        byte[] buff = new byte[_1M];
+        byte[] buff = new byte[_1K];
         Deflater compresser = new Deflater();
         compresser.setInput(bytes);
         compresser.finish();
@@ -80,12 +89,13 @@ public class Test {
         final byte[] compressed = gzipCompress(bytes);
         System.out.println("gzip压缩后length=" + compressed.length);
 
-        final byte[] decompressed = gzipDecompress(compressed);
-        System.out.println("gzip解压缩后length=" + decompressed.length);
+        final byte[] deCompressed = gzipDecompress(compressed);
+        System.out.println("gzip解压缩后length=" + deCompressed.length);
+        System.out.println("zlib解压缩后 push=" + new String(deCompressed, Charsets.UTF_8).equals(push));
 
         for (int i = 0; i < bytes.length; i++) {
-            if (bytes[i] != decompressed[i]) {
-                System.out.println(bytes[i] + "++" + decompressed[i]);
+            if (bytes[i] != deCompressed[i]) {
+                System.out.println(bytes[i] + "++" + deCompressed[i]);
             }
         }
     }
@@ -126,18 +136,19 @@ public class Test {
     }
 
     private static byte[] construct() throws FileNotFoundException {
-        final MyBloomFilter myBloomFilter = MyBloomFilterTest.initMyBloom();
+        /*final MyBloomFilter myBloomFilter = MyBloomFilterTest.initMyBloom();
         final long[] data = myBloomFilter.getData();
         final byte[] bytes = myBloomFilter.getByte();
         if (data.length * 8 != bytes.length){
             System.out.println(data.length);
             System.out.println(bytes.length);
             System.exit(1);
-        }
+        }*/
+
         /*for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte)(bytes[i]&0x7F);
         }*/
-        return bytes;
+        return push.getBytes(Charsets.UTF_8);
         /*String file = "/Users/young/Desktop/temp/sub_total.cidlist";
         final BufferedReader br = new BufferedReader(new FileReader(new File(file)));
         String cid = null;

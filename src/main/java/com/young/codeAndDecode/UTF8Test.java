@@ -33,6 +33,9 @@ public class UTF8Test {
 
         byte bytes2 = (byte)49;
         System.out.println(Integer.toBinaryString(bytes2));
+
+        int i = -2147418112;
+        System.out.println(Integer.toBinaryString(i));
     }
 
     /**

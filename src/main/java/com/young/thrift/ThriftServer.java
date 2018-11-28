@@ -12,12 +12,12 @@ public class ThriftServer {
         try {
             TProcessor tprocessor = new WorkerThrift.Processor<WorkerThrift.Iface>(
                     new WorkerThriftImpl());
-            TServerSocket serverTransport = new TServerSocket(9999);
+            TServerSocket serverTransport = new TServerSocket(9990);
             TThreadPoolServer.Args tArgs = new TThreadPoolServer.Args(serverTransport);
             tArgs.processor(tprocessor);
             tArgs.protocolFactory(new TBinaryProtocol.Factory());
             TServer server = new TThreadPoolServer(tArgs);
-            System.out.println("Startint thrift server at port : "+ 9999);
+            System.out.println("Startint thrift server at port : "+ 9990);
             server.serve();
         } catch (Exception e) {
             e.printStackTrace();
