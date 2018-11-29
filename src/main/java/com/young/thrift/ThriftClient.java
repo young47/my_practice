@@ -30,8 +30,8 @@ public class ThriftClient {
     private static final AtomicInteger output = new AtomicInteger(0);
 
     public static void main(String[] args) throws TException {
-        //TTransport transport = new TSocket("10.2.131.165", 9990);
-        TTransport transport = new TSocket("127.0.0.1", 9990);
+        TTransport transport = new TSocket("10.2.131.165", 9990);
+        //TTransport transport = new TSocket("127.0.0.1", 9990);
         TProtocol protocol = new TBinaryProtocol(transport);
         WorkerThrift.Client client = new WorkerThrift.Client(protocol);
         transport.open();
