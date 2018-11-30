@@ -1,5 +1,6 @@
 package com.young.thrift.pushTest.sync;
 
+import com.young.thrift.ThriftConnectionPool;
 import com.young.thrift.module.Push;
 import com.young.thrift.module.UserInfo;
 import com.young.thrift.pushTest.PushThrift;
@@ -33,7 +34,9 @@ public class PushClient {
 
     private static int num = 100000;
     private static int batch = 30;
-    private static final BlockingQueue<Push> QUEUE = new ArrayBlockingQueue(num);
+    private static final ArrayBlockingQueue<Push> QUEUE = new ArrayBlockingQueue(num);
+
+
 
     public static void main(String[] args) throws TException, InterruptedException {
         producePush();
@@ -49,42 +52,48 @@ public class PushClient {
         syncCallBatch(countDownLatch1);
         countDownLatch1.await();
         long end1 = System.currentTimeMillis();
-        System.out.println(num + "个push cost：" + (end1 - begin1) + "ms");
+        System.out.println(pushed.get() + "个push cost：" + (end1 - begin1) + "ms");
 
         EXECUTOR_SERVICE.shutdown();
     }
 
-    private static void syncCallBatch(CountDownLatch countDownLatch) {
+    private static void syncCallBatch(CountDownLatch countDownLatch) throws InterruptedException {
         for (int i = 0; i < threads; i++) {
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
                     ArrayList<Push> pushes = new ArrayList<>(batch);
+                    int current = 0;
                     try {
                         Push push;
                         while ((push = QUEUE.poll()) != null) {
                             if (pushes.size() < batch) {
                                 pushes.add(push);
-                                continue;
+                                if (pushes.size() == batch) {
+                                    PushThrift.Client client = getClient();
+                                    if (client != null) {
+                                        client.pushList(pushes);
+                                        pushed.addAndGet(pushes.size());
+                                        current += pushes.size();
+                                        pushes.clear();
+                                        release(client);
+                                    }
+                                } else {
+                                    continue;
+                                }
                             }
+                        }
+                        if (pushes.size() > 0) {
                             PushThrift.Client client = getClient();
                             if (client != null) {
                                 client.pushList(pushes);
-                                //System.out.println("返回：" + push1 + ",pushed=" + pushed.incrementAndGet());
-                                release(client);
+                                pushed.addAndGet(pushes.size());
                                 pushes.clear();
+                                release(client);
                             }
                         }
-                        if (pushes.size()>0){
-                            PushThrift.Client client = getClient();
-                            if (client != null) {
-                                client.pushList(pushes);
-                                //System.out.println("返回：" + push1 + ",pushed=" + pushed.incrementAndGet());
-                                release(client);
-                                pushes.clear();
-                            }
-                        }
-                    } catch (TException e) {
+
+                    } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         countDownLatch.countDown();
@@ -100,20 +109,20 @@ public class PushClient {
             Push push = new Push();
             push.setCid("6438994208421752841");
             push.setOid("324058455");
-            push.setMid("381815491");
+            /*push.setMid("381815491");
 
             UserInfo userInfo = new UserInfo();
             userInfo.setImei("12367898765678");
             userInfo.setToken(1234325234);
             userInfo.setPt("723481df5c045473c5a24d2cdb5e8ec1fca2e0b1");
             userInfo.setDt("9e2d08a1e1bca8dabfcd391fed2b97e52ebaae952e5145a72c8515db12542d91");
-            userInfo.setPm(1);
+            userInfo.setPm(i);
             userInfo.setTm(25479915);
             userInfo.setCh("1020");
             userInfo.setCid("6438994208421752841");
 
 
-            push.setUserInfo(userInfo);
+            push.setUserInfo(userInfo);*/
             QUEUE.put(push);
         }
         System.out.println("to push size=" + QUEUE.size());
@@ -128,7 +137,8 @@ public class PushClient {
                         Push push;
                         while ((push = QUEUE.poll()) != null) {
                             Push finalPush = push;
-                            PushThrift.Client client = getClient();
+                            //PushThrift.Client client = getClient();
+                            PushThrift.Client client = ThriftConnectionPool.getClient();
                             if (client != null) {
                                 boolean push1 = client.push(finalPush);
                                 //System.out.println("返回：" + push1 + ",pushed=" + pushed.incrementAndGet());
@@ -154,7 +164,7 @@ public class PushClient {
                 if (available > 0) {
                     return list.remove(available - 1);
                 } else if ((lent + available) < max_connections) {
-                    TTransport transport = new TFastFramedTransport(new TSocket("127.0.0.1", PushServer.port));
+                    TTransport transport = new TFastFramedTransport(new TSocket("10.2.131.165", PushServer.port));
                     //TTransport transport = new TSocket("127.0.0.1", PushServer.port);
                     TProtocol protocol = new TCompactProtocol(transport);
                     PushThrift.Client client = new PushThrift.Client(protocol);
