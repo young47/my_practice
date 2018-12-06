@@ -6,7 +6,9 @@ import com.young.guava.MyBloomFilterTest;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.*;
 
 public class Test {
@@ -91,7 +93,7 @@ public class Test {
 
         final byte[] deCompressed = gzipDecompress(compressed);
         System.out.println("gzip解压缩后length=" + deCompressed.length);
-        System.out.println("zlib解压缩后 push=" + new String(deCompressed, Charsets.UTF_8).equals(push));
+        System.out.println("gzip解压缩后 push=" + new String(deCompressed, Charsets.UTF_8).equals(push));
 
         for (int i = 0; i < bytes.length; i++) {
             if (bytes[i] != deCompressed[i]) {
@@ -128,14 +130,13 @@ public class Test {
             gzipOutputStream.write(data, 0, count);
         }
         gzipOutputStream.finish();
-        gzipOutputStream.finish();
         gzipOutputStream.close();
         final long end = System.currentTimeMillis();
         System.out.println("gzip压缩cost: "+ (end-begin)+"ms");
         return outputStream.toByteArray();
     }
 
-    private static byte[] construct() throws FileNotFoundException {
+    private static byte[] construct() throws IOException {
         /*final MyBloomFilter myBloomFilter = MyBloomFilterTest.initMyBloom();
         final long[] data = myBloomFilter.getData();
         final byte[] bytes = myBloomFilter.getByte();
@@ -148,7 +149,15 @@ public class Test {
         /*for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte)(bytes[i]&0x7F);
         }*/
-        return push.getBytes(Charsets.UTF_8);
+        Map<String, Long> hashMap = new ConcurrentHashMap<>(2000000);
+        for (int i = 0; i < 1000_0000; i++) {
+            hashMap.put(6459285550141976699l+i+"", System.currentTimeMillis());
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);
+        outputStream.writeObject(hashMap);
+        return byteArrayOutputStream.toByteArray();
+        //return push.getBytes(Charsets.UTF_8);
         /*String file = "/Users/young/Desktop/temp/sub_total.cidlist";
         final BufferedReader br = new BufferedReader(new FileReader(new File(file)));
         String cid = null;

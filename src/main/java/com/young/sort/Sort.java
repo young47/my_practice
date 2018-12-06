@@ -1,6 +1,7 @@
 package com.young.sort;
 
 import io.netty.bootstrap.Bootstrap;
+import org.apache.hadoop.util.MergeSort;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -10,12 +11,12 @@ import java.util.Random;
  * <1>
  * 冒泡和插入是稳定排序，选择排序不是；
  * 我觉得最根本的原因是：前二者实际上都经过了相邻元素比较的步骤(插入是相邻元素的挪动，实际上相当于比较了)，当相邻的元素相等时，不让交换就可以了；而选择排序并没有这个步骤，而是会跳跃
- *
+ * <p>
  * 比如： 5A, 4, 5B, 2
  * 冒泡：当5A和5B比较时，我们可以不交换，结果： 2，4，5A，5B
  * 插入：经过一次插入过程，数组变为 4，5A，5B，2；当插入5B时，我们可以控制让5B保持原位
  * 选择： 2，4，5B，5A，两个5交换了顺序
- *
+ * <p>
  * <2>
  * 冒泡可以优化：当内循环无数据交换时，可以说明已经排序完成；因为内循环时，相邻元素都要见一次面，所以只有是一个有序数组时才可能不发生数据交换
  * 插入没有优化：每次插入一个元素时，只是定位到了这个元素的相对位置，如上面例子第一次遍历后 4，5A，5B，2；4放到了5A前，但这只是完成了4和5A相对位置的确定，最终的位置必须将所有的元素遍历完成；
@@ -59,7 +60,10 @@ public class Sort {
             halfInsertSort(arrays);
             //shellSort(arrays);
 
+            mergeSort(arrays);
+
             //print(arrays);
+
         }
         final long end = System.currentTimeMillis();
         System.out.println(CNT + "个数组[" + SIZE + "个元素]排序消耗：" + (end - begin) + "ms");
@@ -140,8 +144,9 @@ public class Sort {
 
     /**
      * 希尔排序
-     *
+     * <p>
      * 非稳定排序
+     *
      * @param arrays
      */
     private static void shellSort(int[] arrays) {
@@ -258,6 +263,27 @@ public class Sort {
             }
         }
         return start;
+    }
+
+    //merge(sort(p,q), sort(q+1, r))
+    private static void mergeSort(int[] arrays) {
+        msort(arrays, 0, arrays.length);
+    }
+    private static void msort(int[] arrays, int start, int end){
+        if (end <= start) {
+            return;
+        }
+        int middle = (start + end) / 2;
+        while (end > start) {
+            msort(arrays, start, middle);
+            msort(arrays, middle + 1, end);
+            int[] tmp = new int[end - start + 1];
+            //merge(tmp, );
+        }
+
+    }
+    private static void merge(int[] arrays1, int[] arrays2){
+
     }
 
     private static void print(int[] arrays) {

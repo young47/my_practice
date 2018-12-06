@@ -6,6 +6,7 @@ import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.server.TThreadedSelectorServer;
+import org.apache.thrift.transport.TFastFramedTransport;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportException;
@@ -39,6 +40,7 @@ public class PushServer {
         TThreadedSelectorServer.Args tArgs = new TThreadedSelectorServer.Args(serverTransport);
         tArgs.processor(tprocessor);
         tArgs.protocolFactory(new TCompactProtocol.Factory());
+        tArgs.workerThreads(Runtime.getRuntime().availableProcessors());
         TServer server = new TThreadedSelectorServer(tArgs);
         System.out.println("Start thrift server at port : "+ port);
         server.serve();

@@ -2,7 +2,6 @@ package com.young.thrift;
 
 import com.young.thrift.pushTest.PushThrift;
 import com.young.thrift.pushTest.sync.PushServer;
-import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TFastFramedTransport;
@@ -14,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -23,18 +20,18 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ThriftConnectionPool {
     private static final Logger logger = LoggerFactory.getLogger(ThriftConnectionPool.class);
     private static final int _1MIN = 60 * 1000;
+    private static final int _1SECOND = 1 * 1000;
     private static int maxConnections = 2000;
-    private static int idleTime = 2 * _1MIN;
+    private static int minConnections = 20;
+    private static int idleTimeOut = 3 * _1MIN;
+    private static int validateAfterInactivity = 30 * _1SECOND;
 
     private static final ReentrantLock GetClientLock = new ReentrantLock(false);
     private static final Condition notEmpty = GetClientLock.newCondition();
     private static final Condition empty = GetClientLock.newCondition();
 
-    private static final List<PushThrift.Client> available = new ArrayList<>(200);
-    private static final List<PushThrift.Client> lent = new ArrayList<>(100);
-
-
-    private static final Thread createThread = new Thread();
+    private static final List<ThriftPooledConnection> available = new ArrayList<>(200);
+    private static final List<ThriftPooledConnection> lent = new ArrayList<>(100);
 
     static {
         Thread createThread = new Thread(new Runnable() {
@@ -43,11 +40,13 @@ public class ThriftConnectionPool {
                 for (; ; ) {
                     try {
                         GetClientLock.lock();
-                        //每次都先创建一个
-                        PushThrift.Client newClient = createNewClient();
-                        available.add(newClient);
+                        if (available.size() > 0) {
+                            empty.await();
+                        }
+
+                        ThriftPooledConnection pooledConnection = createNewConnection();
+                        available.add(pooledConnection);
                         notEmpty.signalAll();
-                        empty.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     } catch (TTransportException e) {
@@ -59,19 +58,18 @@ public class ThriftConnectionPool {
 
             }
         });
-        createThread.start();
         createThread.setDaemon(true);
+        createThread.start();
         logger.info("Thread [to create thrift client] begins!");
     }
 
-    public static PushThrift.Client getClient() {
-        return getClient(0L, TimeUnit.MILLISECONDS);
+    public static ThriftPooledConnection getConnection() {
+        return getConnection(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
     }
 
-    public static PushThrift.Client getClient(long timeout, TimeUnit timeUnit) {
+    public static ThriftPooledConnection getConnection(long timeout, TimeUnit timeUnit) {
         for (; ; ) {
             try {
-                long remainingToWait = timeUnit.toNanos(timeout);
                 GetClientLock.lock();
                 int availableSize = available.size();
                 int lentSize = lent.size();
@@ -79,56 +77,78 @@ public class ThriftConnectionPool {
                     if (lentSize < maxConnections) {
                         empty.signalAll();
                     }
-                    remainingToWait = notEmpty.awaitNanos(remainingToWait);
+                    long remainingToWait = notEmpty.awaitNanos(timeout);
                     timeout = remainingToWait;
                     if (remainingToWait <= 0L) {
-                        throw new RuntimeException("Get thrift client timeout");
+                        throw new RuntimeException("Get thrift client timeout!");
                     }
                 } else {
-                    PushThrift.Client client = available.remove(availableSize - 1);
-                    if (isClosed(client)) {
+                    ThriftPooledConnection pooledConnection = available.remove(availableSize - 1);
+                    if (System.currentTimeMillis() - pooledConnection.getLastActiveTimeMillis() >= idleTimeOut) {
+                        pooledConnection.gettTransport().close();
+                        pooledConnection = null;
                         continue;
                     }
-                    lent.add(client);
-                    return client;
+                    if (validateAfterInactivity > 0) {
+                        if (System.currentTimeMillis() - pooledConnection.getLastActiveTimeMillis() >= validateAfterInactivity) {
+                            if (!validate(pooledConnection)) {
+                                close(pooledConnection);
+                                continue;
+                            }
+                        }
+                    }
+                    lent.add(pooledConnection);
+                    return pooledConnection;
                 }
             } catch (InterruptedException e) {
-                throw new RuntimeException("Get thrift client timeout");
+                throw new RuntimeException("Get thrift client timeout!", e);
             } finally {
                 GetClientLock.unlock();
             }
         }
     }
 
-    private static boolean isClosed(PushThrift.Client client) {
-        try {
-            return client.ping();
-        } catch (TException e) {
+    private static void close(ThriftPooledConnection pooledConnection) {
+        pooledConnection.gettTransport().close();
+        pooledConnection = null;
+    }
+
+    private static boolean validate(ThriftPooledConnection pooledConnection) {
+        if (pooledConnection.gettTransport().isOpen()) {
+            //这种需要再检查一次，因为服务端的连接可能已经断开
+            try {
+                return pooledConnection.getClient().ping();
+            } catch (Exception e) {
+                logger.error("ping() error! this socket had been closed!");
+                return false;
+            }
+        } else {
             return false;
         }
     }
 
-    private static PushThrift.Client createNewClient() throws TTransportException {
-        TTransport transport = new TFastFramedTransport(new TSocket("10.2.131.165", PushServer.port));
+    private static ThriftPooledConnection createNewConnection() throws TTransportException {
+        TTransport transport = new TFastFramedTransport(new TSocket("10.2.132.127", PushServer.port));
+        //TTransport transport = new TSocket("10.2.131.165", PushServer.port);
         TProtocol protocol = new TCompactProtocol(transport);
         PushThrift.Client client = new PushThrift.Client(protocol);
         transport.open();
-        return client;
+        return new ThriftPooledConnection(client, transport, System.currentTimeMillis());
     }
 
-    private static void release(PushThrift.Client client) {
-        if (client == null) {
+    public static void release(ThriftPooledConnection pooledConnection) {
+        if (pooledConnection == null) {
             return;
         }
         try {
             GetClientLock.lock();
-            lent.remove(client);
-            available.add(client);
+            lent.remove(pooledConnection);
+            pooledConnection.setLastActiveTimeMillis(System.currentTimeMillis());
+            available.add(pooledConnection);
             notEmpty.signalAll();
         } finally {
             GetClientLock.unlock();
         }
     }
-
 
 }

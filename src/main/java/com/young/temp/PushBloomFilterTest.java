@@ -18,7 +18,7 @@ public class PushBloomFilterTest {
         check(pushBloomFilter);
     }
 
-    private static void fillingFilter(PushBloomFilter pushBloomFilter) throws FileNotFoundException {
+    public static void fillingFilter(PushBloomFilter pushBloomFilter) throws FileNotFoundException {
         String file = "/Users/young/Desktop/temp/sub_total.cidlist";
         final BufferedReader br = new BufferedReader(new FileReader(new File(file)));
         String cid = null;

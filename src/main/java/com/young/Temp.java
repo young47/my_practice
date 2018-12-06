@@ -1,12 +1,17 @@
 package com.young;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Base64;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Temp {
     static {
@@ -14,7 +19,7 @@ public class Temp {
         //System.out.println(i);
     }
     static int i = 0;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnsupportedEncodingException {
         System.out.println("0".equals(null));
 
         StringBuilder sb = new StringBuilder();
@@ -55,7 +60,7 @@ public class Temp {
         System.out.println(Base64.getEncoder().encodeToString("0861135039542305200000058800CN01".getBytes()));
 
         int[] arrays = {};
-        System.out.println(arrays[0]);
+        //System.out.println(arrays[0]);
 //        System.out.println("123".compareTo("23"));
 
         /*try {
@@ -97,5 +102,15 @@ public class Temp {
             e.printStackTrace();
         }*/
 
+        ConcurrentHashMap<String, String> concurrentHashMap = new ConcurrentHashMap<>();
+        concurrentHashMap.put("123","abc");
+        boolean replace = concurrentHashMap.replace("456", "qaw", "888");
+        System.out.println(replace);
+        System.out.println(concurrentHashMap.get("123"));
+
+        System.out.println(System.currentTimeMillis()/1000/60);
+
+        System.out.println("6438994208421752841".getBytes("utf-8").length);
+        System.out.println(6438994208421752841L);
     }
 }

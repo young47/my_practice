@@ -3,14 +3,16 @@ package com.young;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HashCodeTest {
+    private static final String file = "/tmp/push-time.dump";
+
     public static void main(String... args) throws Exception{
-        System.out.println("a占用内存大小："+"a".getBytes().length);
+        /*System.out.println("a占用内存大小："+"a".getBytes().length);
         File file = new File("/Users/young/Downloads/temp.txt");
         BufferedReader bf =new BufferedReader(new FileReader(file));
         String cid=null;
@@ -22,7 +24,41 @@ public class HashCodeTest {
             }
         }
         System.out.println(set);
-        System.out.println(Joiner.on("|").join(set));
+        System.out.println(Joiner.on("|").join(set));*/
+        Map<String, Integer> map = init();
 
+        //dump(map);
+
+        //undump();
+
+    }
+
+    private static void undump() throws IOException, ClassNotFoundException {
+        long begin = System.currentTimeMillis();
+        ObjectInputStream inputStream = new ObjectInputStream(new BufferedInputStream(new FileInputStream(new File(file))));
+        ConcurrentHashMap map = (ConcurrentHashMap<String, Long>) inputStream.readObject();
+        long end = System.currentTimeMillis();
+        System.out.println("undump "+map.size()+" cost:"+(end-begin)+"ms");
+        System.out.println("map size="+map.size());
+    }
+
+    private static void dump(Map<String, Integer> map) throws IOException {
+        long begin = System.currentTimeMillis();
+        ObjectOutputStream outputStream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(new File(file))));
+        outputStream.writeObject(map);
+        long end = System.currentTimeMillis();
+        System.out.println("dump "+map.size()+" cost:"+(end-begin)+"ms");
+    }
+
+    private static Map<String,Integer> init() {
+        int num = 1000_0000;
+        long begin = System.currentTimeMillis();
+        ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>(20000);
+        for (int i = 0; i < num; i++) {
+            map.put("6438994208421752841"+i, (int)(System.currentTimeMillis()/1000/60));
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("init "+map.size()+" cost:"+(end-begin)+"ms");
+        return map;
     }
 }
