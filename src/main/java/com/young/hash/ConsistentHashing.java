@@ -1,15 +1,8 @@
 package com.young.hash;
 
-import net.spy.memcached.DefaultHashAlgorithm;
-import sun.security.provider.MD5;
-
-import java.io.*;
-import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 不带虚拟node的一致性hash算法
@@ -19,19 +12,20 @@ public class ConsistentHashing {
     private static MessageDigest md5;
     /*public static String[] servers = {"10.18.75.101", "10.18.75.102", "10.18.75.103", "10.18.75.104", "10.18.75.105",
             "10.18.75.111", "10.18.75.112", "10.18.75.113", "10.18.75.114", "10.18.75.115","10.17.02.19","10.16.78.119"};*/
-    public static String[] servers = {"CentOS_txyz_75_101", "CentOS_txyz_79_102",
-            "10.10.71.120", "CentOS_txyz_5_1", "10_12_34CentOS", "10.1.175.13", "10.20.05.124", "10.10.75.125","10.17.02.19",
-            "CentOS_txyz_85_121"};
+    //public static String[] servers = {"CentOS_txyz_75_101", "CentOS_txyz_79_102",
+    //        "10.10.71.120", "CentOS_txyz_5_1", "10_12_34CentOS", "10.1.175.13", "10.20.05.124", "10.10.75.125","10.17.02.19",
+    //        "CentOS_txyz_85_121"};
+    public static String[] servers = {"server-0", "server-1", "server-2", "server-3", "server-4"};
 //,
     private static TreeMap<Integer, String> nodes = new TreeMap<>();
 
 
     static {
-        try {
+        /*try {
             md5 = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-        }
+        }*/
         for (String server : servers) {
             nodes.put(getHash(server), server);
         }

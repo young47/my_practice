@@ -28,6 +28,8 @@ public class ProxyTest {
 
         InvocationHandler handler = Proxy.getInvocationHandler(o);
         System.out.println(handler);
+
+        //Proxy proxy = new Proxy(new ProxyHandler(developer));
     }
 
 

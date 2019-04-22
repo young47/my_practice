@@ -1,16 +1,12 @@
 package com.young;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
-
 import java.io.*;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class HashCodeTest {
     private static final String file = "/tmp/push-time.dump";
-
+    private static int i = 0;
     public static void main(String... args) throws Exception{
         /*System.out.println("a占用内存大小："+"a".getBytes().length);
         File file = new File("/Users/young/Downloads/temp.txt");
@@ -25,12 +21,18 @@ public class HashCodeTest {
         }
         System.out.println(set);
         System.out.println(Joiner.on("|").join(set));*/
-        Map<String, Integer> map = init();
+        //Map<String, Integer> map = init();
+        System.out.println(test1());
+        System.out.println(i);
 
         //dump(map);
 
         //undump();
 
+    }
+
+    private static int test1() {
+        return i++;
     }
 
     private static void undump() throws IOException, ClassNotFoundException {

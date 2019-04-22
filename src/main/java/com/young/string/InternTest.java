@@ -1,13 +1,13 @@
 package com.young.string;
 
 /**
- * jdk1,6常量池放在方法区，jdk1.7常量池放在堆内存，jdk1.8放在元空间里面，和堆相独立
+ * jdk1.6常量池放在方法区，jdk1.7常量池放在堆内存，jdk1.8放在元空间里面，和堆相独立
  * http://blog.csdn.net/seu_calvin/article/details/52291082
  */
 public class InternTest {
     public static void main(String[] args){
         //test_1();
-        //test_2();
+        test_2();
         test_3();
 
     }
@@ -59,7 +59,7 @@ public class InternTest {
         System.out.println(s == s2);//s指向堆，s2指向常量池，肯定是不同的
 
         String s3 = new String("1") + new String("1");//堆中创建了对象，并在常量池里放入1
-        //区别提现在这里。！！！！！！！！！！！！！！！！！！！！
+        //区别体现在这里。！！！！！！！！！！！！！！！！！！！！
         s3.intern();//检查常量池中是否有11，此时没有，jdk1.6的做法是直接创建11；jdk7没有直接创建，而是存储了s3引用的对象地址。这里不是很明白，是在常量池中保存的这个地址？
         String s4 = "11";//去常量池创建11，发现已有，s4指向了这个地址
         System.out.println(s3 == s4);//true

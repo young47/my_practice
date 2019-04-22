@@ -8,6 +8,7 @@ import com.young.thrift.module.Push2;
 import com.young.thrift.module.UserInfo;
 import com.young.thrift.pushTest.PushThrift;
 import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TFastFramedTransport;
@@ -26,34 +27,88 @@ import static io.netty.util.ReferenceCountUtil.release;
 
 public class PushClient {
 
-    private static final int threads = 1;
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(threads+1);
+    //private static final int threads = Runtime.getRuntime().availableProcessors();
+    private static final int threads = 50;
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(threads);
 
     private static final AtomicInteger pushed = new AtomicInteger(0);
     private static final int max_connections = 1000;
     private static final ArrayList<PushThrift.Client> list = new ArrayList<>(max_connections);
 
-    private static final ReentrantLock LOCK = new ReentrantLock(false);
-    private static final Condition CONDITION = LOCK.newCondition();
-
-    private static int available = 0, lent = 0;
-
-    private static int num = 1;
-    private static int batch = 5000;
+    private static int num = 5_000;
+    private static int batch = 1000;
     private static final ArrayBlockingQueue<Push> QUEUE = new ArrayBlockingQueue(num);
     private static final ArrayBlockingQueue<String> QUEUE2 = new ArrayBlockingQueue(num);
+    private static final int oid = (int)(1000000 * Math.random());
 
 
     public static void main(String[] args) throws TException, InterruptedException {
-        //producePush();
+        if (args.length > 0) {
+            num = Integer.valueOf(args[0]).intValue();
+            batch = Integer.valueOf(args[1]).intValue();
+        }
+        System.out.println("threads=" + threads + ",num=" + num + ",batch=" + batch);
+
         //test();
         //test_2();
-        test_3();
-
+        //test_3();
+        //test_4();
         //testBatch_1();
-        //testBatch_2();
+        testBatch_2();
+        //singleRequest();
+        EXECUTOR_SERVICE.shutdownNow();
+        Thread.sleep(1000_000);
+        ThriftConnectionPool.close();
+    }
 
-        EXECUTOR_SERVICE.shutdown();
+    private static void singleRequest() throws TException {
+        final ThriftPooledConnection connection = ThriftConnectionPool.getConnection();
+        PushThrift.Client client = connection.getClient();
+        long begin = System.currentTimeMillis();
+        /*String s = client.get();
+        long end = System.currentTimeMillis();
+        byte[] bytes = s.getBytes();
+        System.out.println(bytes.length/1000000+"M");
+        System.out.println("get cost：" + (end - begin) + "ms");*/
+    }
+
+    private static void test_4() throws InterruptedException {
+        ArrayBlockingQueue<Push2> QUEUE3 = new ArrayBlockingQueue(num);
+        long cid = 6438994208421752841l;
+        String oid = "324058455";
+        for (int i = 0; i < num; i++) {
+            cid += i;
+            QUEUE3.put(new Push2(cid + "", oid));
+        }
+        CountDownLatch countDownLatch = new CountDownLatch(threads);
+        long begin = System.currentTimeMillis();
+        for (int i = 0; i < threads; i++) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    ThriftPooledConnection connection = null;
+                    try {
+                        Push2 push2;
+                        while ((push2 = QUEUE3.poll()) != null) {
+                            connection = ThriftConnectionPool.getConnection();
+                            PushThrift.Client client = connection.getClient();
+                            //boolean result = client.push2(push2);
+                            pushed.incrementAndGet();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        ThriftConnectionPool.release(connection);
+                        countDownLatch.countDown();
+                    }
+                }
+            };
+            EXECUTOR_SERVICE.execute(runnable);
+        }
+        countDownLatch.await();
+        long end = System.currentTimeMillis();
+        System.out.println(pushed.get() + " 个 push string cost：" + (end - begin) + "ms");
+        EXECUTOR_SERVICE.shutdownNow();
     }
 
     private static void test_3() throws InterruptedException {
@@ -65,12 +120,15 @@ public class PushClient {
             @Override
             public void run() {
                 long begin = System.currentTimeMillis();
-                try {
-                    boolean result = client.pushLong(cid, oid);
-                } catch (TException e) {
-                    e.printStackTrace();
-                } finally {
-                    ThriftConnectionPool.release(connection);
+                int i = 0;
+                while (i++ < 100000) {
+                    try {
+                        boolean result = client.push(cid, oid);
+                    } catch (TException e) {
+                        e.printStackTrace();
+                    } finally {
+                        ThriftConnectionPool.release(connection);
+                    }
                 }
                 long end = System.currentTimeMillis();
                 System.out.println("1个push long cost：" + (end - begin) + "ms");
@@ -82,12 +140,15 @@ public class PushClient {
             @Override
             public void run() {
                 long begin = System.currentTimeMillis();
-                try {
-                    boolean result = client1.push2(new Push2(cid+"",oid+""));
-                } catch (TException e) {
-                    e.printStackTrace();
-                } finally {
-                    ThriftConnectionPool.release(connection1);
+                int i = 0;
+                while (i++ < 100000) {
+                    /*try {
+                        boolean result = client1.push2(new Push2(cid+"",oid+""));
+                    } catch (TException e) {
+                        e.printStackTrace();
+                    } finally {
+                        ThriftConnectionPool.release(connection1);
+                    }*/
                 }
                 long end = System.currentTimeMillis();
                 System.out.println("1个push string cost：" + (end - begin) + "ms");
@@ -114,36 +175,39 @@ public class PushClient {
     }
 
     private static void testBatch_2() throws InterruptedException {
-        String cid = "6438994208421752841";
-        String oid = "324058455";
+        long cid = 0l;
         //ArrayList<String> list = new ArrayList<>(num);
-        for (int i = 0; i < num; i++) {
-            QUEUE2.put(cid + "," + oid);
+        ArrayBlockingQueue<Long> queue = new ArrayBlockingQueue(num);
+        for (int i = 1; i <= num; i++) {
+            queue.put(cid + i);
         }
+        System.out.println("queue init complete. count=" + num);
         CountDownLatch countDownLatch1 = new CountDownLatch(threads);
         long begin1 = System.currentTimeMillis();
-        syncCallBatch_2(countDownLatch1);
+        syncCallBatch_2(countDownLatch1, queue);
         countDownLatch1.await();
         long end1 = System.currentTimeMillis();
-        System.out.println(pushed.get() + "个push cost：" + (end1 - begin1) + "ms");
+        System.out.println(pushed.get() + "个 cid cost：" + (end1 - begin1) + "ms");
     }
 
-    private static void syncCallBatch_2(CountDownLatch countDownLatch) {
+    private static void syncCallBatch_2(CountDownLatch countDownLatch, ArrayBlockingQueue<Long> queue) {
         for (int i = 0; i < threads; i++) {
+            final int j = i;
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
-                    ArrayList<String> pushes = new ArrayList<>(batch);
+                    ArrayList<Long> pushes = new ArrayList<>(batch);
                     ThriftPooledConnection connection = null;
                     try {
-                        String cid;
+                        Long cid;
                         connection = ThriftConnectionPool.getConnection();
+                        //System.out.println(Thread.currentThread().getName()+" "+j);
                         PushThrift.Client client = connection.getClient();
-                        while ((cid = QUEUE2.poll()) != null) {
+                        while ((cid = queue.poll()) != null) {
                             if (pushes.size() < batch) {
                                 pushes.add(cid);
                                 if (pushes.size() == batch) {
-                                    List<String> strings = client.checkAndPutIfAbsent(pushes);
+                                    List<Long> strings = client.pushBatch(pushes, oid);
                                     pushed.addAndGet(strings.size());
                                     pushes.clear();
                                 } else {
@@ -152,11 +216,9 @@ public class PushClient {
                             }
                         }
                         if (pushes.size() > 0) {
-                            if (client != null) {
-                                List<String> strings = client.checkAndPutIfAbsent(pushes);
-                                pushed.addAndGet(strings.size());
-                                pushes.clear();
-                            }
+                            List<Long> strings = connection.getClient().pushBatch(pushes, oid);
+                            pushed.addAndGet(strings.size());
+                            pushes.clear();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -171,6 +233,8 @@ public class PushClient {
     }
 
     private static void testBatch_1() throws InterruptedException {
+        producePush();
+
         CountDownLatch countDownLatch1 = new CountDownLatch(threads);
         long begin1 = System.currentTimeMillis();
         syncCallBatch(countDownLatch1);
@@ -190,7 +254,7 @@ public class PushClient {
                         Push push;
                         connection = ThriftConnectionPool.getConnection();
                         PushThrift.Client client = connection.getClient();
-                        while ((push = QUEUE.poll()) != null) {
+                        /*while ((push = QUEUE.poll()) != null) {
                             if (pushes.size() < batch) {
                                 pushes.add(push);
                                 if (pushes.size() == batch) {
@@ -210,7 +274,7 @@ public class PushClient {
                                 pushed.addAndGet(pushes.size());
                                 pushes.clear();
                             }
-                        }
+                        }*/
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -229,7 +293,7 @@ public class PushClient {
             Push push = new Push();
             push.setCid("6438994208421752841");
             push.setOid("324058455");
-            /*push.setMid("381815491");
+            push.setMid("381815491");
 
             UserInfo userInfo = new UserInfo();
             userInfo.setImei("12367898765678");
@@ -242,7 +306,7 @@ public class PushClient {
             userInfo.setCid("6438994208421752841");
 
 
-            push.setUserInfo(userInfo);*/
+            push.setUserInfo(userInfo);
             QUEUE.put(push);
         }
         System.out.println("to push size=" + QUEUE.size());
@@ -254,7 +318,7 @@ public class PushClient {
                 @Override
                 public void run() {
                     ThriftPooledConnection connection = null;
-                    try {
+                    /*try {
                         Push push;
                         while ((push = QUEUE.poll()) != null) {
                             Push finalPush = push;
@@ -271,7 +335,7 @@ public class PushClient {
                     } finally {
                         countDownLatch.countDown();
                         ThriftConnectionPool.release(connection);
-                    }
+                    }*/
                 }
             };
             EXECUTOR_SERVICE.execute(runnable);
@@ -283,6 +347,7 @@ public class PushClient {
             Runnable runnable = new Runnable() {
                 long cid = 888888888888888l;
                 int oid = 55555555;
+
                 @Override
                 public void run() {
                     ThriftPooledConnection connection = null;
@@ -293,7 +358,7 @@ public class PushClient {
                             connection = ThriftConnectionPool.getConnection();
                             PushThrift.Client client = connection.getClient();
                             if (client != null) {
-                                boolean result = client.pushLong(cid+i, oid);
+                                boolean result = client.push(cid + i, oid);
                                 //System.out.println("返回：" + push1 + ",pushed=" + pushed.incrementAndGet());
                             }
                         }

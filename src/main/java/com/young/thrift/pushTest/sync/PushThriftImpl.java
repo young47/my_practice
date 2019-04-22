@@ -11,6 +11,7 @@ import org.apache.thrift.TException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,78 +22,77 @@ public class PushThriftImpl implements PushThrift.Iface {
     private static PushBloomFilter BLOOM_FILTER;
     private static final int num = 1000_0000;
     private static Map<String, Long> updateTime = new ConcurrentHashMap<>(num);
+    private static AtomicInteger received = new AtomicInteger(0);
+    private static final AtomicInteger connections = new AtomicInteger(0);
+    private static String _1M = "";
     static {
-        initBloom();
+        //initBloom();
+       /* StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 10_0000; i++) {
+            builder.append("0123456789");
+        }
+        _1M = builder.toString();*/
     }
 
     @Override
-    public boolean push1(Push1 push) throws TException {
+    public boolean push(long cid, int oid) throws TException {
         return false;
     }
 
     @Override
-    public boolean push2(Push2 push) throws TException {
-        return false;
+    public List<Long> pushBatch(List<Long> cidList, int oid) throws TException {
+        ArrayList<Long> longs = new ArrayList<>(cidList.size());
+        for (Long aLong : cidList) {
+           /* for (int i = 0; i < 16; i++) {
+                aLong.hashCode();
+            }*/
+            longs.add(aLong);
+        }
+        return longs;
     }
 
     private static void initBloom() {
         BLOOM_FILTER = PushBloomFilter.create(BloomFilterParams.MAX_KEY_INSERTED, 0.0001d, DUMP);
-        try {
+        /*try {
             PushBloomFilterTest.fillingFilter(BLOOM_FILTER);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
-        System.out.println("begin to init cid map");
+        }*/
+       /* System.out.println("begin to init cid map");
         long cid = 6438994208421752841l;
         for (int i = 0; i < num; i++) {
             updateTime.put(cid+i +"", 100000l);
         }
-        System.out.println("end to init cid map");
+        System.out.println("end to init cid map");*/
 
     }
 
-    @Override
     public List<String> checkAndPutIfAbsent(List<String> cids) throws TException {
         for (String cid : cids) {
-            BLOOM_FILTER.put(cid);
-            Long aLong = updateTime.get(cid);
+            if (BLOOM_FILTER.put(cid)){
+                received.incrementAndGet();
+
+            }else {
+                System.out.println("cid="+cid+" exists!");
+            }
+            //Long aLong = updateTime.get(cid);
+           /* cid.hashCode();
+            cid.hashCode();
+
+            cid.hashCode();
+
+            cid.hashCode();
+
+            cid.hashCode();
+
+            cid.hashCode();*/
         }
-        System.out.println(Thread.currentThread().getName()+":"+cids.size());
+        System.out.println(Thread.currentThread().getName()+":"+received.get());
         return cids;
-    }
-
-    private static final AtomicInteger connections = new AtomicInteger(0);
-
-    @Override
-    public boolean push(Push push) throws TException {
-        push.setMid("1234");
-        System.out.println(Thread.currentThread().getName()+":"+connections.incrementAndGet());
-        return true;
-    }
-
-    @Override
-    public boolean contains(String cid, String oid) throws TException {
-        cid += oid;
-        return true;
     }
 
     @Override
     public boolean ping() throws TException {
-        return true;
-    }
-
-    @Override
-    public boolean pushLong(long cid, int oid) throws TException {
-        return false;
-    }
-
-    @Override
-    public boolean pushList(List<Push> pushList) throws TException {
-        for (Push push : pushList) {
-            System.out.println(push.getUserInfo().getDt());
-            connections.incrementAndGet();
-        }
-        System.out.println(Thread.currentThread().getName()+":"+connections.get());
         return false;
     }
 }

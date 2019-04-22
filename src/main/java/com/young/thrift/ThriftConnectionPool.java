@@ -2,6 +2,8 @@ package com.young.thrift;
 
 import com.young.thrift.pushTest.PushThrift;
 import com.young.thrift.pushTest.sync.PushServer;
+import org.apache.commons.lang.math.NumberUtils;
+import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TFastFramedTransport;
@@ -21,10 +23,10 @@ public class ThriftConnectionPool {
     private static final Logger logger = LoggerFactory.getLogger(ThriftConnectionPool.class);
     private static final int _1MIN = 60 * 1000;
     private static final int _1SECOND = 1 * 1000;
-    private static int maxConnections = 2000;
+    private static int maxConnections = 50;
     private static int minConnections = 20;
     private static int idleTimeOut = 3 * _1MIN;
-    private static int validateAfterInactivity = 30 * _1SECOND;
+    private static int validateAfterInactivity = 300 * _1SECOND;
 
     private static final ReentrantLock GetClientLock = new ReentrantLock(false);
     private static final Condition notEmpty = GetClientLock.newCondition();
@@ -128,11 +130,17 @@ public class ThriftConnectionPool {
     }
 
     private static ThriftPooledConnection createNewConnection() throws TTransportException {
-        TTransport transport = new TFastFramedTransport(new TSocket("10.2.132.127", PushServer.port));
+        //TTransport transport = new TFastFramedTransport(new TSocket("10.2.132.127", PushServer.port));
+        //TTransport transport = new TFastFramedTransport(new TSocket("127.0.0.1", PushServer.port));
+        TTransport transport = new TFastFramedTransport(new TSocket("10.16.11.127", PushServer.port));
         //TTransport transport = new TSocket("10.2.131.165", PushServer.port);
         TProtocol protocol = new TCompactProtocol(transport);
         PushThrift.Client client = new PushThrift.Client(protocol);
         transport.open();
+        /*TTransport transport = new TSocket("10.16.11.127", PushServer.port);
+        TProtocol protocol = new TBinaryProtocol(transport);
+        PushThrift.Client client = new PushThrift.Client(protocol);
+        transport.open();*/
         return new ThriftPooledConnection(client, transport, System.currentTimeMillis());
     }
 
@@ -146,6 +154,20 @@ public class ThriftConnectionPool {
             pooledConnection.setLastActiveTimeMillis(System.currentTimeMillis());
             available.add(pooledConnection);
             notEmpty.signalAll();
+        } finally {
+            GetClientLock.unlock();
+        }
+    }
+
+    public static void close() {
+        try {
+            GetClientLock.lock();
+            int n = 0;
+            for (ThriftPooledConnection pooledConnection : available) {
+                pooledConnection.gettTransport().close();
+                n++;
+            }
+            System.out.println("shutdown thrift connection : " + n);
         } finally {
             GetClientLock.unlock();
         }

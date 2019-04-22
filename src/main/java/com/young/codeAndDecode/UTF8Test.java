@@ -14,7 +14,9 @@ public class UTF8Test {
         //开头是1110 ，说明连续的三个字节表示一个字符， 且形式是 1110xxxx 10yyyyyy 10zzzzzz
         //xxxxyyyy yyzzzzzz 就是这个字符的unicode编码
         //10001101 11101111 = 0x8DEF 就是"路"的unicode编码
-        byte[] bytes = {(byte)232,(byte)183,(byte)175};
+        //byte[] bytes = {(byte)232,(byte)183,(byte)175};
+        byte[] bytes = {(byte)-126,(byte)33};
+
 
 
         try {

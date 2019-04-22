@@ -1,10 +1,7 @@
-package com.young.collection.map.collection.set;
+package com.young.collection.set;
 
-import java.util.ArrayList;
-import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.TreeSet;
-import java.util.concurrent.PriorityBlockingQueue;
 
 public class TreeSetTest {
     public static void main(String[] args) {

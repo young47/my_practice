@@ -1,9 +1,5 @@
 package com.young.sort;
 
-import io.netty.bootstrap.Bootstrap;
-import org.apache.hadoop.util.MergeSort;
-
-import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -23,27 +19,41 @@ import java.util.Random;
  */
 public class Sort {
     //数组中包含的元素个数
-    private static final int SIZE = 1000;
+    private static final int SIZE = 10000;
 
     //数组个数
     private static final int CNT = 1000;
 
     public static void main(String[] args) {
-        timeCost();
         int[] arrays = {3, -1, 20, 49, 10, 1, 0, 35, 20};
-        //bubbleSort(arrays);
+        System.out.println("原始 arrays：");
+        print(arrays);
+        //int[] arrays = {9, 6, 7};
+        timeCost();
+        //doSort(arrays);
+        /*System.out.println("排序后 arrays：");
+        print(arrays);*/
 
-        //selectSort(arrays);
+    }
 
-        //insertSort(arrays);
+    private static void doSort(int[] arrays) {
+        bubbleSort(arrays);
 
-        //bubbleSort2(arrays);
+        selectSort(arrays);
 
-        //shellSort(arrays);
+        insertSort(arrays);
 
-        //halfInsertSort(arrays);
-        //print(arrays);
+        bubbleSort2(arrays);
 
+        shellSort(arrays);
+
+        halfInsertSort(arrays);
+
+        MergeSort.mergeSort(arrays);
+
+        QuickSort.sort(arrays);
+
+        HeapSort.sort(arrays);
     }
 
     private static void timeCost() {
@@ -57,23 +67,31 @@ public class Sort {
             //selectSort(arrays);
 
             //insertSort(arrays);
-            halfInsertSort(arrays);
+            //halfInsertSort(arrays);
             //shellSort(arrays);
 
-            mergeSort(arrays);
-
+            //MergeSort.mergeSort(arrays);
+            QuickSort.sort(arrays);
+            checkSorted(arrays);
             //print(arrays);
-
         }
         final long end = System.currentTimeMillis();
         System.out.println(CNT + "个数组[" + SIZE + "个元素]排序消耗：" + (end - begin) + "ms");
     }
 
-    /**
-     * 内循环只能确定一个元素的位置，所以n个元素，外循环就得是n次
-     */
+    public static boolean checkSorted(int[] arrays) {
+        for (int i = 0; i < arrays.length-1; i++) {
+            if (arrays[i]>arrays[i+1]){
+                System.out.println("sort error");
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
+     * 内循环只能确定一个元素的位置，所以n个元素，外循环就得是n次
+     *
      * 这种算法实际上操作的是无序数组，总是在无序数组中两两比较交换
      *
      * @param arrays
@@ -265,30 +283,15 @@ public class Sort {
         return start;
     }
 
-    //merge(sort(p,q), sort(q+1, r))
-    private static void mergeSort(int[] arrays) {
-        msort(arrays, 0, arrays.length);
-    }
-    private static void msort(int[] arrays, int start, int end){
-        if (end <= start) {
-            return;
-        }
-        int middle = (start + end) / 2;
-        while (end > start) {
-            msort(arrays, start, middle);
-            msort(arrays, middle + 1, end);
-            int[] tmp = new int[end - start + 1];
-            //merge(tmp, );
-        }
-
-    }
-    private static void merge(int[] arrays1, int[] arrays2){
-
-    }
-
-    private static void print(int[] arrays) {
+    public static void print(int[] arrays) {
+        int i = 0;
         for (int array : arrays) {
-            System.out.print(array + ",");
+            i++;
+            if (i != arrays.length){
+                System.out.print(array + ",");
+            }else {
+                System.out.print(array);
+            }
         }
         System.out.println("");
     }
@@ -298,7 +301,7 @@ public class Sort {
      * @param size size of array elements
      * @return
      */
-    private static int[] generateArrays(int size) {
+    public static int[] generateArrays(int size) {
         final Random random = new Random();
         final int[] ints = new int[size];
         for (int j = 0; j < size; j++) {

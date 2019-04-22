@@ -63,7 +63,7 @@ public class PushAsyncClient {
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
-                    try {
+                    /*try {
                         Push push;
                         while ((push = QUEUE.poll()) != null) {
                             Push finalPush = push;
@@ -77,7 +77,7 @@ public class PushAsyncClient {
                         e.printStackTrace();
                     } finally {
                         countDownLatch.countDown();
-                    }
+                    }*/
                 }
             };
             EXECUTOR_SERVICE.execute(runnable);

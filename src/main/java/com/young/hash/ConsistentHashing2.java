@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConsistentHashing2 extends ConsistentHashing {
     private static TreeMap<Integer, String> virtualNodes = new TreeMap<>();
     //private static TreeMap<Integer, String> nodes = new TreeMap<>();
-    private static int VIRTUAL_NODES = 200;
+    private static int VIRTUAL_NODES = 1000;
 
-    private static List<String> newNodes = Lists.newArrayList("10.17.02.19","10.16.78.119");
+    private static List<String> newNodes = Lists.newArrayList("server-0","10.16.78.119");
 
     private static Map<String, List<String>> dataMoved = new ConcurrentHashMap<>(128);
     static {
@@ -24,6 +24,9 @@ public class ConsistentHashing2 extends ConsistentHashing {
                 virtualNodes.put(hash, virtualNodeName);
             }
         }
+        /*for (Integer integer : virtualNodes.keySet()) {
+            System.out.print("["+integer+":"+virtualNodes.get(integer)+"] -> ");
+        }*/
         /*for (String server : newNodes) {
             //System.out.println(virtualNodes.get(integer)+","+integer);
             final Integer integer = virtualNodes.lowerKey(155733514);

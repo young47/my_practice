@@ -1,4 +1,4 @@
-package com.young.collection.map.collection.set;
+package com.young.collection.set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;

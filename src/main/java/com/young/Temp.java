@@ -1,17 +1,12 @@
 package com.young;
 
-import com.alibaba.fastjson.JSONObject;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class Temp {
     static {
@@ -68,10 +63,9 @@ public class Temp {
         } catch (CacheException e) {
             e.printStackTrace();
         }*/
-        /*BufferedWriter bw = null;
-        final File file = new File("/Users/young/Desktop/newlocation.mapping");
-        try (BufferedReader br = new BufferedReader(new FileReader(new File("/Users/young/Desktop/location" +
-                ".mapping")))) {
+        BufferedWriter bw = null;
+        final File file = new File("/Users/young/Desktop/temp/test.cidlist");
+        /*try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             bw = new BufferedWriter(new FileWriter(file));
 
             String line = null;
@@ -87,15 +81,15 @@ public class Temp {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        try (BufferedReader br = new BufferedReader(new FileReader(new File("/Users/young/Desktop/newlocation" +
-                ".mapping")))) {
-
+        }*/
+        /*try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            HashSet<String> cids = new HashSet<>();
             String line = null;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
+                cids.add(line);
             }
             br.close();
+            System.out.println("total cid = "+cids.size());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -112,5 +106,8 @@ public class Temp {
 
         System.out.println("6438994208421752841".getBytes("utf-8").length);
         System.out.println(6438994208421752841L);
+
+        String aa = " abc   ";
+        System.out.println(aa.trim().length());
     }
 }

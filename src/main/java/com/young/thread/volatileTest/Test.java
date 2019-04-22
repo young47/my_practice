@@ -3,8 +3,8 @@ package com.young.thread.volatileTest;
 import java.util.concurrent.CountDownLatch;
 
 public class Test {
-    private static int x = 0, y = 0;
-    private static int a = 0, b =0;
+    private static  int x = 0, y = 0;
+    private static  int a = 0, b = 0;
 
     public static void main(String[] args) throws InterruptedException {
         int i = 0;
@@ -19,6 +19,7 @@ public class Test {
                     latch.await();
                 } catch (InterruptedException e) {
                 }
+                System.out.println("I am A");
                 a = 1;
                 x = b;
             });
@@ -28,6 +29,7 @@ public class Test {
                     latch.await();
                 } catch (InterruptedException e) {
                 }
+                System.out.println("I am B");
                 b = 1;
                 y = a;
             });

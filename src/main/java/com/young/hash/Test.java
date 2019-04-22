@@ -1,8 +1,7 @@
 package com.young.hash;
 
-import java.io.*;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,24 +21,19 @@ public class Test {
             System.out.println(server + " md5:" + getHash(server));
         }*/
         final HashSet<String> temp = new HashSet<>(1000000);
-        //String out = "/Users/young/Desktop/temp/sub_total.cidlist";
-        //
-        String file = "/Users/young/Desktop/temp/sub_total.cidlist";
-        final BufferedReader br = new BufferedReader(new FileReader(new File(file)));
-        //final BufferedWriter bw = new BufferedWriter(new FileWriter(new File(out)));
-        String cid = null;
         int total = 0;
+        /*String file = "/Users/young/Desktop/temp/sub_total.cidlist";
+        final BufferedReader br = new BufferedReader(new FileReader(new File(file)));
+        String cid = null;
         try {
             while ((cid = br.readLine()) != null) {
                 total++;
-                /*cid=cid.split("\t")[0];
-                if (temp.contains(cid)){
-                    continue;
-                }
-                bw.write(cid);
-                bw.write(System.lineSeparator());
-                temp.add(cid);*/
                 final String server = ConsistentHashing2.getServer(cid);
+                statistics.compute(server, (key, value) -> value == null ? 1 : ++value);
+            }
+            for (int i = 1; i <= 3000_0000; i++) {
+                total++;
+                final String server = ConsistentHashing2.getServer(i+"");
                 statistics.compute(server, (key, value) -> value == null ? 1 : ++value);
             }
         }catch (Exception e){
@@ -52,8 +46,12 @@ public class Test {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }*/
+        for (int i = 1; i <= 300_0000; i++) {
+            total++;
+            final String server = ConsistentHashing2.getServer(i+"");
+            statistics.compute(server, (key, value) -> value == null ? 1 : ++value);
         }
-
         System.out.println("total : " + total);
         for (String server : statistics.keySet()) {
             System.out.println(server + " cid count : " + statistics.get(server));

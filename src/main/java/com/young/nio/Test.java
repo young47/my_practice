@@ -1,15 +1,11 @@
 package com.young.nio;
 
 import sun.nio.ch.DirectBuffer;
-import sun.nio.ch.FileChannelImpl;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-
-import static com.young.jvm.OOM.StackOverflowTest.test;
 
 /**
  * Created by young on 17/11/1.
@@ -24,10 +20,10 @@ public class Test {
 
     public static void main(String[] args) throws InterruptedException {
         //System.out.println(System.getProperty("sun.nio.MaxDirectMemorySize"));
-        //commonIoTest();
+        commonIoTest();
         //commonIoLineTest();
         //nioTest();
-        nioMappedBufferTest();
+        //nioMappedBufferTest();
         //nioDirectMemoryTest();
 
     }

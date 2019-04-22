@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class ShareMemory {
-    private static final File FILE = new File("/Users/young/Desktop/temp/bloom-filter.dump");
+    //private static final File FILE = new File("/Users/young/Desktop/temp/bloom-filter.dump");
+    private static final File FILE = new File("/tmp/mmap.txt");
     private static int size = 1<<20;
     private static MappedByteBuffer sharedBuffer = null;
     private static final int RF = 1;

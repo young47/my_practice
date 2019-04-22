@@ -12,7 +12,7 @@ public class CyclicBarrierTest {
         CyclicBarrier cyclicbarrier = new CyclicBarrier(n, new Runnable(){
             @Override
             public void run() {
-                System.out.println("所有线程都到达栅栏处");
+                System.out.println(Thread.currentThread().getName()+" 所有线程都到达栅栏处");
             }
         });
         for (int i=0; i<n-1; i++){

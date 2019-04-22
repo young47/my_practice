@@ -2,6 +2,7 @@ package com.young.thrift.pushTest.sync;
 
 import com.young.thrift.pushTest.PushThrift;
 import org.apache.thrift.TProcessor;
+import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
@@ -28,7 +29,8 @@ public class PushServer {
         TServerSocket serverSocket = new TServerSocket(port);
         TThreadPoolServer.Args args = new TThreadPoolServer.Args(serverSocket);
         args.processor(tProcessor);
-        args.protocolFactory(new TCompactProtocol.Factory());
+        args.protocolFactory(new TBinaryProtocol.Factory());
+        //args.transportFactory(new TFastFramedTransport.Factory());
         TServer server = new TThreadPoolServer(args);
         System.out.println("Start thrift server at port : "+ port);
         server.serve();
@@ -37,11 +39,12 @@ public class PushServer {
     private static void test1() throws TTransportException {
         TProcessor tprocessor = new PushThrift.Processor<PushThrift.Iface>(new PushThriftImpl());
         TNonblockingServerSocket serverTransport = new TNonblockingServerSocket(port);
-        TThreadedSelectorServer.Args tArgs = new TThreadedSelectorServer.Args(serverTransport);
-        tArgs.processor(tprocessor);
-        tArgs.protocolFactory(new TCompactProtocol.Factory());
-        tArgs.workerThreads(Runtime.getRuntime().availableProcessors());
-        TServer server = new TThreadedSelectorServer(tArgs);
+        TThreadedSelectorServer.Args args = new TThreadedSelectorServer.Args(serverTransport);
+        args.processor(tprocessor);
+        args.protocolFactory(new TCompactProtocol.Factory());
+        args.transportFactory(new TFastFramedTransport.Factory());
+        args.workerThreads(Runtime.getRuntime().availableProcessors());
+        TServer server = new TThreadedSelectorServer(args);
         System.out.println("Start thrift server at port : "+ port);
         server.serve();
     }

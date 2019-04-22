@@ -17,7 +17,7 @@ public class RunManyThreadOrderly {
 
         public synchronized void produce() {
             try {
-                while (isFull) {
+                while (isFull) { //这里注意不要使用if，因为在现代多核cpu系统中，某些时候一个等待的线程会无缘无故地被唤醒，为了避免这种情况，请用while
                     //System.out.println(Thread.currentThread().getName()+" is waiting");
                     wait();
                     //System.out.println(Thread.currentThread().getName()+" is waked up");
@@ -25,6 +25,12 @@ public class RunManyThreadOrderly {
                 isFull = true; //synchronized内，这个变量会有volatile的效果
                 notify();
                 System.out.println("※※※※※※※※※");
+                /*while (!isFull) { //这里注意不要使用if，因为在现代多核cpu系统中，某些时候一个等待的线程会无缘无故地被唤醒，为了避免这种情况，请用while
+                    System.out.println("※※※※※※※※※");
+                    isFull = true; //synchronized内，这个变量会有volatile的效果
+                    notify();
+                }
+                wait();*/
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -40,6 +46,12 @@ public class RunManyThreadOrderly {
                 isFull = false;
                 notify();
                 System.out.println("△△△△△△△");
+                /*while (isFull) {
+                    System.out.println("△△△△△△△");
+                    isFull = false;
+                    notify();
+                }
+                wait();*/
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

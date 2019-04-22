@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.young.thrift.module.Push;
 import com.young.thrift.module.Push1;
 import com.young.thrift.module.Push2;
-import com.young.thrift.module.UserInfo;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
@@ -12,7 +11,6 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 
 public class SpaceTest {
     private static int num = 1;
@@ -43,7 +41,7 @@ public class SpaceTest {
             push.setOid("324058455");
         }*/
 
-        //tBinaryProtocolTest(push2);
+        tBinaryProtocolTest(push2);
         //tBinaryProtocolTest(push1);
 
         tCompactProtocol(push2);
@@ -72,7 +70,8 @@ public class SpaceTest {
 
     private static void tCompactProtocol(TBase push) throws TException {
         ByteArrayOutputStream baos;
-        byte[] array;TSerializer tSerializer1 = new TSerializer(new TCompactProtocol.Factory());
+        byte[] array;
+        TSerializer tSerializer1 = new TSerializer(new TCompactProtocol.Factory());
         baos = new ByteArrayOutputStream();
         //userInfo.setToken(1);
         long begin1 = System.currentTimeMillis();
